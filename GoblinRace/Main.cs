@@ -5,6 +5,9 @@ using System.Linq;
 using Kingmaker.Blueprints;
 using Kingmaker;
 using Kingmaker.Blueprints.Classes;
+using Kingmaker.Localization;
+using Kingmaker.UnitLogic.FactLogic;
+using Kingmaker.Localization.Shared;
 
 namespace GoblinRace
 {
@@ -50,6 +53,29 @@ namespace GoblinRace
                     Array.Resize(ref races, length + 1);
                     races[length] = goblinRace;
 
+                    var stealthy = ResourcesLibrary.TryGetBlueprint<BlueprintFeature>("610652378253d3845bb70f005c084daa"); //Stealthy
+                    var statBonus = stealthy.GetComponent<AddStatBonus>();
+                    statBonus.Stat = Kingmaker.EntitySystem.Stats.StatType.SkillStealth;
+                    statBonus.Value = 4;
+
+                } catch(Exception ex)
+                {
+                    Main.DebugError(ex);
+                }
+            }
+        }
+
+        [Harmony12.HarmonyPatch(typeof(LocalizationManager), "LoadPack")]
+        static class LocalizationManager_CurrentLocale_SetterPatch
+        {
+            static void Postfix(Locale locale, ref LocalizationPack __result)
+            {
+                try
+                {
+                    if(locale == Locale.enGB && __result != null)
+                    {
+                        __result.Strings["9774d914-1a01-4f52-824c-ac71d213f271"] = "Sneaky";
+                    }
                 } catch(Exception ex)
                 {
                     Main.DebugError(ex);
