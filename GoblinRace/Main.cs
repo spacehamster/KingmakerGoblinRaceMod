@@ -8,6 +8,12 @@ using Kingmaker.Blueprints.Classes;
 using Kingmaker.Localization;
 using Kingmaker.UnitLogic.FactLogic;
 using Kingmaker.Localization.Shared;
+using UnityEngine;
+using System.IO;
+using Harmony12;
+using Kingmaker.Visual.CharacterSystem;
+using System.Collections.Generic;
+using static Harmony12.AccessTools;
 
 namespace GoblinRace
 {
@@ -31,10 +37,11 @@ namespace GoblinRace
                 logger = modEntry.Logger;
                 var harmony = Harmony12.HarmonyInstance.Create(modEntry.Info.Id);
                 harmony.PatchAll(Assembly.GetExecutingAssembly());
-            } catch(Exception ex)
+            }
+            catch (Exception ex)
             {
                 DebugError(ex);
-                throw ex;   
+                throw ex;
             }
             return true;
         }
@@ -58,7 +65,8 @@ namespace GoblinRace
                     statBonus.Stat = Kingmaker.EntitySystem.Stats.StatType.SkillStealth;
                     statBonus.Value = 4;
 
-                } catch(Exception ex)
+                }
+                catch (Exception ex)
                 {
                     Main.DebugError(ex);
                 }
@@ -72,11 +80,37 @@ namespace GoblinRace
             {
                 try
                 {
-                    if(locale == Locale.enGB && __result != null)
+                    if (locale == Locale.enGB && __result != null)
                     {
                         __result.Strings["9774d914-1a01-4f52-824c-ac71d213f271"] = "Sneaky";
                     }
-                } catch(Exception ex)
+                }
+                catch (Exception ex)
+                {
+                    Main.DebugError(ex);
+                }
+            }
+        }
+
+        [Harmony12.HarmonyPatch(typeof(AssetBundle), "LoadFromFile", new Type[] { typeof(string) })]
+        static class AssetBundle_LoadFromFilePatch
+        {
+            static FieldRef<EquipmentEntity, List<Texture2D>> m_PrimaryRampsRef;
+            static void Prepare()
+            {
+                m_PrimaryRampsRef = AccessTools.FieldRefAccess<EquipmentEntity, List<Texture2D>>("m_PrimaryRamps");
+            }
+            static void Postfix(string path, ref AssetBundle __result)
+            {
+                try
+                {
+                    var assetId = Path.GetFileName(path).Replace("resource_", "");
+                    if (assetId != "e4b9c88f38026d440a12ae8ea148b8f3") return;
+                    var ee = __result.LoadAllAssets<EquipmentEntity>()[0];
+                    m_PrimaryRampsRef(ee) = new List<Texture2D>();
+                    ee.ColorsProfile = null;
+                }
+                catch (Exception ex)
                 {
                     Main.DebugError(ex);
                 }
